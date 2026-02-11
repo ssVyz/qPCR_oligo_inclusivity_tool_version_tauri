@@ -94,7 +94,7 @@ function renderApp(): string {
       </header>
 
       <main class="content">
-        <h1>qPCR Oligo Inclusivity Tool</h1>
+        <h1>qPCR Oligo Inclusivity Tool V3 (Tauri)</h1>
         <p class="subtitle">Categorized oligo analysis with amplicon detection</p>
 
         <!-- Sequence File Section -->
@@ -289,8 +289,8 @@ function renderApp(): string {
     <!-- About Modal -->
     <div class="modal-overlay hidden" id="modal-about">
       <div class="modal modal-small">
-        <h2>qPCR Oligo Inclusivity Tool</h2>
-        <p>Version 2.0.0</p>
+        <h2>qPCR Oligo Inclusivity Tool V3 (Tauri)</h2>
+        <p>Version 3.0.0</p>
         <p>A high-performance oligo inclusivity analysis tool built with Rust and rust-bio.</p>
         <h3>Features:</h3>
         <ul>

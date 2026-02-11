@@ -1,4 +1,4 @@
-# qPCR Oligo Inclusivity Tool v2.0
+# qPCR Oligo Inclusivity Tool V3 (Tauri)
 
 A desktop application for evaluating how well a set of qPCR oligonucleotides (forward primers, reverse primers, and probes) matches against a collection of target sequences in FASTA format. It reports per-sequence alignment signatures, mismatch distributions, amplicon statistics, and per-oligo match rates.
 

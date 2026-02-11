@@ -1,7 +1,7 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "aligner_tauriport",
-  "version": "0.1.0",
+  "productName": "qPCR_oligo_inclusivity_tool",
+  "version": "3.0.0",
   "identifier": "com.lab.qpcr-oligo-inclusivity",
   "build": {
     "frontendDist": "../dist",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "qPCR Oligo Inclusivity Tool v2.0",
+        "title": "qPCR Oligo Inclusivity Tool V3 (Tauri)",
         "width": 950,
         "height": 800,
         "minWidth": 700,
