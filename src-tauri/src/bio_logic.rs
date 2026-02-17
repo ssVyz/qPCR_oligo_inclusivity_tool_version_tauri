@@ -537,14 +537,6 @@ pub fn analyze_sequence(
     let rev_matched = rev_results.values().filter(|r| r.matched).count();
     let probe_matched = probe_results.values().filter(|r| r.matched).count();
 
-    let total_mismatches: usize = fwd_results
-        .values()
-        .chain(rev_results.values())
-        .chain(probe_results.values())
-        .filter(|r| r.matched)
-        .map(|r| r.mismatches)
-        .sum();
-
     let best_fwd_mm = fwd_results
         .values()
         .filter(|r| r.matched)
@@ -560,6 +552,10 @@ pub fn analyze_sequence(
         .filter(|r| r.matched)
         .map(|r| r.mismatches)
         .min();
+
+    let total_mismatches: usize = best_fwd_mm.unwrap_or(0)
+        + best_rev_mm.unwrap_or(0)
+        + best_probe_mm.unwrap_or(0);
 
     SequenceResult {
         fwd_results,
