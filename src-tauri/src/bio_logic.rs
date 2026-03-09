@@ -421,22 +421,45 @@ pub fn find_best_amplicon(
 
     let mut valid_amplicons: Vec<(String, String, usize, usize, usize)> = Vec::new();
 
+    let check_size = |amplicon_size: usize| -> bool {
+        match (min_size, max_size) {
+            (Some(min), Some(max)) => amplicon_size >= min && amplicon_size <= max,
+            (Some(min), None) => amplicon_size >= min,
+            (None, Some(max)) => amplicon_size <= max,
+            (None, None) => true,
+        }
+    };
+
     for (fwd_id, fwd_start, _fwd_end) in &forward_hits {
         for (rev_id, _rev_start, rev_end) in &reverse_hits {
+            // Normal orientation: forward primer before reverse primer
             if fwd_start < rev_end {
                 let amplicon_size = rev_end - fwd_start + 1;
-                let size_ok = match (min_size, max_size) {
-                    (Some(min), Some(max)) => amplicon_size >= min && amplicon_size <= max,
-                    (Some(min), None) => amplicon_size >= min,
-                    (None, Some(max)) => amplicon_size <= max,
-                    (None, None) => true,
-                };
-                if size_ok {
+                if check_size(amplicon_size) {
                     valid_amplicons.push((
                         fwd_id.clone(),
                         rev_id.clone(),
                         *fwd_start,
                         *rev_end,
+                        amplicon_size,
+                    ));
+                }
+            }
+        }
+    }
+
+    // Also check reverse-complement orientation: reverse primer before forward
+    // primer on the target sequence (sequence is on the opposite strand)
+    for (fwd_id, _fwd_start, fwd_end) in &forward_hits {
+        for (rev_id, rev_start, _rev_end) in &reverse_hits {
+            if rev_start < fwd_end {
+                let amplicon_size = fwd_end - rev_start + 1;
+                if check_size(amplicon_size) {
+                    valid_amplicons.push((
+                        fwd_id.clone(),
+                        rev_id.clone(),
+                        *rev_start,
+                        *fwd_end,
                         amplicon_size,
                     ));
                 }
