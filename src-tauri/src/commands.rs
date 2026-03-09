@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -342,4 +343,112 @@ pub fn get_fasta_info(state: tauri::State<'_, AppState>) -> Result<String, Strin
     }
 
     Ok(info)
+}
+
+#[tauri::command]
+pub fn export_results_json(path: String, state: tauri::State<'_, AppState>) -> Result<(), String> {
+    let results = state.results.lock().unwrap();
+    let results = results
+        .as_ref()
+        .ok_or("No results to export. Run analysis first.")?;
+
+    let json = serde_json::to_string_pretty(results)
+        .map_err(|e| format!("Serialization error: {}", e))?;
+    std::fs::write(&path, json).map_err(|e| format!("Error writing file: {}", e))?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn dump_fasta(
+    path: String,
+    mode: String,
+    threshold: Option<usize>,
+    range_start: Option<usize>,
+    range_end: Option<usize>,
+    state: tauri::State<'_, AppState>,
+) -> Result<String, String> {
+    let results = state.results.lock().unwrap();
+    let results = results
+        .as_ref()
+        .ok_or("No results available. Run analysis first.")?;
+
+    let sequences = state.sequences.lock().unwrap();
+    if sequences.is_empty() {
+        return Err("No sequences loaded.".to_string());
+    }
+
+    // Collect IDs from patterns matching the criteria
+    let mut matched_ids: HashSet<String> = HashSet::new();
+    let mut include_unmatched = false;
+
+    match mode.as_str() {
+        "less_than" => {
+            let thresh = threshold.ok_or("Threshold required for 'less than' mode.")?;
+            for (_sig, data) in &results.alignment_dict {
+                if data.total_mismatches < thresh {
+                    for id in &data.member_ids {
+                        matched_ids.insert(id.clone());
+                    }
+                }
+            }
+        }
+        "more_than" => {
+            let thresh = threshold.ok_or("Threshold required for 'more than' mode.")?;
+            for (_sig, data) in &results.alignment_dict {
+                if data.total_mismatches > thresh {
+                    for id in &data.member_ids {
+                        matched_ids.insert(id.clone());
+                    }
+                }
+            }
+            include_unmatched = true;
+        }
+        "unmatched" => {
+            include_unmatched = true;
+        }
+        "range" => {
+            let start = range_start.ok_or("Range start required.")?;
+            let end = range_end.ok_or("Range end required.")?;
+            for (_sig, data) in &results.alignment_dict {
+                if data.total_mismatches >= start && data.total_mismatches <= end {
+                    for id in &data.member_ids {
+                        matched_ids.insert(id.clone());
+                    }
+                }
+            }
+        }
+        _ => return Err(format!("Unknown dump mode: {}", mode)),
+    }
+
+    // If we need unmatched sequences, find all IDs that are NOT in any pattern
+    if include_unmatched {
+        let mut all_pattern_ids: HashSet<String> = HashSet::new();
+        for data in results.alignment_dict.values() {
+            for id in &data.member_ids {
+                all_pattern_ids.insert(id.clone());
+            }
+        }
+        for record in sequences.iter() {
+            if !all_pattern_ids.contains(&record.id) {
+                matched_ids.insert(record.id.clone());
+            }
+        }
+    }
+
+    // Write matching sequences to FASTA
+    let mut output = String::new();
+    let mut count = 0;
+    for record in sequences.iter() {
+        if matched_ids.contains(&record.id) {
+            output.push('>');
+            output.push_str(&record.id);
+            output.push('\n');
+            output.push_str(&record.seq);
+            output.push('\n');
+            count += 1;
+        }
+    }
+
+    std::fs::write(&path, &output).map_err(|e| format!("Error writing file: {}", e))?;
+    Ok(format!("{} sequences written", count))
 }

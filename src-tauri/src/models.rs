@@ -98,11 +98,11 @@ pub struct PatternData {
     pub matched_fwd: usize,
     pub matched_rev: usize,
     pub matched_probe: usize,
-    pub examples: Vec<String>,
+    pub member_ids: Vec<String>,
     pub amplicon_lengths: Vec<usize>,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct OligoStats {
     pub total_matches: usize,
     pub sense_matches: usize,
@@ -173,7 +173,7 @@ pub struct SequenceResult {
     pub best_probe_mm: Option<usize>,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct MismatchDistribution {
     pub zero_mm: usize,
     pub one_mm: usize,
@@ -181,7 +181,7 @@ pub struct MismatchDistribution {
     pub no_match: usize,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct AnalysisResults {
     pub alignment_dict: HashMap<String, PatternData>,
     pub oligo_stats: HashMap<String, OligoStats>,

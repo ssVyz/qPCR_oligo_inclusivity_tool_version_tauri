@@ -83,6 +83,9 @@ function renderApp(): string {
           <div class="menu-dropdown" id="dropdown-tools">
             <button id="btn-fasta-info-menu">FASTA Info</button>
             <button id="btn-advanced-settings-menu">Advanced Settings...</button>
+            <div class="menu-separator"></div>
+            <button id="btn-export-json-menu">Export Results as JSON...</button>
+            <button id="btn-dump-fasta-menu">Dump FASTA...</button>
           </div>
         </div>
         <div class="menu-item" id="menu-help">
@@ -286,6 +289,47 @@ function renderApp(): string {
       </div>
     </div>
 
+    <!-- Dump FASTA Modal -->
+    <div class="modal-overlay hidden" id="modal-dump-fasta">
+      <div class="modal modal-small">
+        <h2>Dump FASTA by Mismatch Filter</h2>
+        <div class="dump-options">
+          <label class="radio-label">
+            <input type="radio" name="dump-mode" value="less_than" checked>
+            Less than X total mismatches
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="dump-mode" value="more_than">
+            More than X total mismatches (includes unmatched)
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="dump-mode" value="unmatched">
+            Unmatched sequences only
+          </label>
+          <label class="radio-label">
+            <input type="radio" name="dump-mode" value="range">
+            Mismatch range (inclusive)
+          </label>
+        </div>
+        <div class="dump-params">
+          <div id="dump-threshold-row" class="setting-row" style="margin-top:10px">
+            <label>Mismatch threshold:</label>
+            <input type="number" id="dump-threshold" min="0" value="1" class="setting-input">
+          </div>
+          <div id="dump-range-row" class="setting-row hidden" style="margin-top:10px">
+            <label>From:</label>
+            <input type="number" id="dump-range-start" min="0" value="0" class="setting-input">
+            <label>To:</label>
+            <input type="number" id="dump-range-end" min="0" value="3" class="setting-input">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-cancel-dump" class="btn">Cancel</button>
+          <button id="btn-do-dump" class="btn btn-primary">Dump...</button>
+        </div>
+      </div>
+    </div>
+
     <!-- About Modal -->
     <div class="modal-overlay hidden" id="modal-about">
       <div class="modal modal-small">
@@ -333,6 +377,7 @@ function init() {
   setupAdvancedSettingsModal();
   setupFastaInfoModal();
   setupAboutModal();
+  setupDumpFastaModal();
   setupBackendEvents();
 
   updateRunButton();
@@ -627,6 +672,14 @@ function setupAnalysisControls() {
     closeAllMenus();
     openAdvancedSettings();
   });
+  $("btn-export-json-menu").addEventListener("click", () => {
+    closeAllMenus();
+    doExportResultsJson();
+  });
+  $("btn-dump-fasta-menu").addEventListener("click", () => {
+    closeAllMenus();
+    openDumpFastaModal();
+  });
 }
 
 function updateRunButton() {
@@ -905,6 +958,94 @@ async function showFastaInfo() {
     $("modal-fasta-info").classList.remove("hidden");
   } catch (e) {
     setStatus(`${e}`);
+  }
+}
+
+// ============================================================================
+// Export Results JSON
+// ============================================================================
+
+async function doExportResultsJson() {
+  if (!state.hasResults) {
+    setStatus("No results to export. Run analysis first.");
+    return;
+  }
+  const path = await save({
+    filters: [{ name: "JSON files", extensions: ["json"] }],
+    title: "Export Results as JSON",
+  });
+  if (path) {
+    try {
+      await api.exportResultsJson(path);
+      setStatus("JSON export complete");
+    } catch (e) {
+      setStatus(`Error exporting JSON: ${e}`);
+    }
+  }
+}
+
+// ============================================================================
+// Dump FASTA Modal
+// ============================================================================
+
+function setupDumpFastaModal() {
+  const radios = document.querySelectorAll('input[name="dump-mode"]');
+  radios.forEach((radio) => {
+    radio.addEventListener("change", () => {
+      const mode = (document.querySelector('input[name="dump-mode"]:checked') as HTMLInputElement).value;
+      $("dump-threshold-row").classList.toggle("hidden", mode === "unmatched" || mode === "range");
+      $("dump-range-row").classList.toggle("hidden", mode !== "range");
+    });
+  });
+
+  $("btn-cancel-dump").addEventListener("click", () => {
+    $("modal-dump-fasta").classList.add("hidden");
+  });
+
+  $("btn-do-dump").addEventListener("click", executeDumpFasta);
+}
+
+function openDumpFastaModal() {
+  if (!state.hasResults) {
+    setStatus("No results available. Run analysis first.");
+    return;
+  }
+  $("modal-dump-fasta").classList.remove("hidden");
+}
+
+async function executeDumpFasta() {
+  const mode = (document.querySelector('input[name="dump-mode"]:checked') as HTMLInputElement).value;
+
+  let threshold: number | null = null;
+  let rangeStart: number | null = null;
+  let rangeEnd: number | null = null;
+
+  if (mode === "less_than" || mode === "more_than") {
+    threshold = Number(($("dump-threshold") as HTMLInputElement).value);
+  } else if (mode === "range") {
+    rangeStart = Number(($("dump-range-start") as HTMLInputElement).value);
+    rangeEnd = Number(($("dump-range-end") as HTMLInputElement).value);
+    if (rangeStart > rangeEnd) {
+      setStatus("Range start must be <= range end.");
+      return;
+    }
+  }
+
+  const path = await save({
+    filters: [
+      { name: "FASTA files", extensions: ["fasta", "fas", "fa", "fna"] },
+    ],
+    title: "Save Dumped FASTA",
+  });
+
+  if (path) {
+    try {
+      const msg = await api.dumpFasta(path, mode, threshold, rangeStart, rangeEnd);
+      $("modal-dump-fasta").classList.add("hidden");
+      setStatus(`FASTA dump complete: ${msg}`);
+    } catch (e) {
+      setStatus(`Error dumping FASTA: ${e}`);
+    }
   }
 }
 

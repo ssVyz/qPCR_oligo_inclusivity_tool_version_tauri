@@ -619,3 +619,26 @@ select.setting-input {
   width: 100%;
   max-width: 150px;
 }
+
+/* ============================================================================
+   Dump FASTA Modal
+   ============================================================================ */
+
+.dump-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.dump-params .setting-row {
+  margin-top: 10px;
+}

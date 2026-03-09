@@ -36,3 +36,23 @@ export async function saveResultsText(path: string): Promise<void> {
 export async function getFastaInfo(): Promise<string> {
   return invoke<string>("get_fasta_info");
 }
+
+export async function exportResultsJson(path: string): Promise<void> {
+  return invoke<void>("export_results_json", { path });
+}
+
+export async function dumpFasta(
+  path: string,
+  mode: string,
+  threshold: number | null,
+  rangeStart: number | null,
+  rangeEnd: number | null
+): Promise<string> {
+  return invoke<string>("dump_fasta", {
+    path,
+    mode,
+    threshold,
+    rangeStart,
+    rangeEnd,
+  });
+}

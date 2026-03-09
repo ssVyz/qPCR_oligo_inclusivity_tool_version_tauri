@@ -196,13 +196,11 @@ pub fn run_analysis(
                         matched_fwd: seq_result.fwd_matched,
                         matched_rev: seq_result.rev_matched,
                         matched_probe: seq_result.probe_matched,
-                        examples: Vec::new(),
+                        member_ids: Vec::new(),
                         amplicon_lengths: Vec::new(),
                     });
                 entry.count += 1;
-                if entry.examples.len() < 10 {
-                    entry.examples.push(record.id.clone());
-                }
+                entry.member_ids.push(record.id.clone());
                 if let Some(ref info) = seq_result.amplicon_info {
                     if info.found && info.size > 0 {
                         entry.amplicon_lengths.push(info.size);
@@ -369,9 +367,9 @@ pub fn generate_output_text(
         sorted_patterns.sort_by(|a, b| b.1.count.cmp(&a.1.count));
 
         for (signature, data) in sorted_patterns {
-            let mut examples_str = data.examples.iter().take(3).cloned().collect::<Vec<_>>();
-            if data.examples.len() > 3 {
-                examples_str.push(format!("... (+{} more)", data.examples.len() - 3));
+            let mut examples_str = data.member_ids.iter().take(3).cloned().collect::<Vec<_>>();
+            if data.member_ids.len() > 3 {
+                examples_str.push(format!("... (+{} more)", data.member_ids.len() - 3));
             }
 
             out.push(format!("Pattern: {}", signature));

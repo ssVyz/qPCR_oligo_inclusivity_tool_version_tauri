@@ -37,6 +37,8 @@ pub fn run() {
             commands::export_excel,
             commands::save_results_text,
             commands::get_fasta_info,
+            commands::export_results_json,
+            commands::dump_fasta,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

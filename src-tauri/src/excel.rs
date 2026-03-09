@@ -286,14 +286,14 @@ pub fn write_excel(
         }
         col += 1;
 
-        let examples: Vec<_> = data.examples.iter().take(3).collect();
+        let examples: Vec<_> = data.member_ids.iter().take(3).collect();
         let mut examples_str = examples
             .iter()
             .map(|s| s.as_str())
             .collect::<Vec<_>>()
             .join(", ");
-        if data.examples.len() > 3 {
-            examples_str.push_str(&format!(" (+{} more)", data.examples.len() - 3));
+        if data.member_ids.len() > 3 {
+            examples_str.push_str(&format!(" (+{} more)", data.member_ids.len() - 3));
         }
         worksheet
             .write_string(row, col, &examples_str)

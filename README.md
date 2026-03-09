@@ -8,7 +8,13 @@ A desktop application for evaluating how well a set of qPCR oligonucleotides (fo
 2. **Enter oligos** - Use the Forward / Reverse / Probes tabs to paste oligo sequences in FASTA format. Forward and reverse primers are required; probes are optional.
 3. **Configure settings** - Adjust minimum matched oligos per category, minimum alignment coverage, and maximum mismatches per oligo. Optionally enable amplicon size constraints.
 4. **Run analysis** - Click "Run Analysis". Progress is shown in real time. Results appear in a modal when complete.
-5. **Export** - Save results as plain text or Excel (.xlsx). Oligo sets can be saved/loaded as JSON via the File menu.
+5. **Export** - Save results as plain text or Excel (.xlsx). Oligo sets can be saved/loaded as JSON.
+6. **Export results as JSON** - Under Tools > "Export Results as JSON", export the full analysis results (including all member sequence IDs per pattern) as a JSON file for downstream software.
+7. **Dump FASTA** - Under Tools > "Dump FASTA", extract subsets of sequences from the source FASTA based on mismatch criteria:
+   - Less than X total mismatches
+   - More than X total mismatches (includes unmatched sequences)
+   - Unmatched sequences only
+   - A specific mismatch range (inclusive)
 
 ## How It Works
 
@@ -22,7 +28,7 @@ For each sequence, the tool finds the best-matching forward and reverse primer p
 
 ### Signature Patterns
 
-For sequences that meet all matching thresholds, a mismatch signature is generated for each oligo alignment. Signatures use `.` for matches, the target base letter for mismatches, and `-` for gaps. Sequences with identical signature patterns across all oligos are grouped and counted.
+For sequences that meet all matching thresholds, a mismatch signature is generated for each oligo alignment. Signatures use `.` for matches, the target base letter for mismatches, and `-` for gaps. Sequences with identical signature patterns across all oligos are grouped and counted. All member sequence IDs are retained per pattern for downstream use.
 
 ### Parallelism
 
